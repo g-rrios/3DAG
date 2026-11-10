@@ -4,7 +4,7 @@
 PlayerSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 29
-  productGUID: 24b3d8a5d8136e74ba3ea7f8a3c4c75e
+  productGUID: 0f0a02a735cb8c24ca3a9e7466e83872
   AndroidProfiler: 0
   AndroidFilterTouchesWhenObscured: 0
   AndroidEnableSustainedPerformanceMode: 0
@@ -13,7 +13,7 @@ PlayerSettings:
   useOnDemandResources: 0
   accelerometerFrequency: 60
   companyName: DefaultCompany
-  productName: 3DAG-Unity
+  productName: 3DAG_v2
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -851,14 +851,14 @@ PlayerSettings:
   editorAssembliesCompatibilityLevel: 1
   m_RenderingPath: 1
   m_MobileRenderingPath: 1
-  metroPackageName: 3DAG-Unity
+  metroPackageName: 3DAG_v2
   metroPackageVersion: 
   metroCertificatePath: 
   metroCertificatePassword: 
   metroCertificateSubject: 
   metroCertificateIssuer: 
   metroCertificateNotAfter: 0000000000000000
-  metroApplicationDescription: 3DAG-Unity
+  metroApplicationDescription: 3DAG_v2
   wsaImages: {}
   metroTileShortName: 
   metroTileShowName: 0
@@ -929,10 +929,10 @@ PlayerSettings:
   activeInputHandler: 1
   windowsGamepadBackendHint: 0
   enableDirectStorage: 0
-  cloudProjectId: 39725e51-59ff-4c6a-ae0a-2b212eaf8c0d
+  cloudProjectId: b5f75691-4dde-4a86-a510-848b9d30ec8b
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: 3DAG-Unity
+  projectName: 3DAG_v2
   organizationId: forrestrrios
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0

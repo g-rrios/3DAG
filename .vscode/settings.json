@@ -67,5 +67,5 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "3DAG.slnx"
+    "dotnet.defaultSolution": "3DAG_v2.slnx"
 }
