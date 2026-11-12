@@ -74,10 +74,10 @@ public class PlayerCollisions : MonoBehaviour
     }
 
 
-    //Custom shut door method
+    // Custom shut door method
     private void ShutDoor()
     {
-        if(doorIsOpen)
+        if(!doorIsOpen)
         {
              audio.PlayOneShot(doorShutSound);
 
