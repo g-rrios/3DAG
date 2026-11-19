@@ -391,34 +391,60 @@ namespace LowPolyDungeon
             return saved;
         }
 
-        /// Which emissive swatches mean FIRE, and which mean magic. A
-        /// glowing runestone must not sprout an orange flame.
-        static readonly string[] FireSwatches = {
-            "EMIT_TORCH", "EMIT_EMBER", "EMIT_CANDLE", "EMIT_FLAME_HI",
-            "EMIT_FLAME_MID", "EMIT_FLAME_LO", "EMIT_COAL", "EMIT_LAVA",
-        };
-
-        /// Does this prefab actually carry fire? Answered from its MATERIALS,
-        /// not its name.
+        /// Which atlas cells mean FIRE, and which mean magic. A glowing
+        /// runestone must not sprout an orange flame.
         ///
-        /// The first version of this matched names containing "Lit" or
-        /// "Candle". Measured against the built library, that caught 10 of
-        /// the 51 emissive models and missed 41 - every lantern, every
+        /// WHY CELLS AND NOT MATERIAL NAMES. v1.0.0 asked each material
+        /// whether its NAME contained "EMIT_TORCH" and so on. Those names
+        /// are Kiln-side: one material per swatch while the model is being
+        /// authored. The pack ships THREE materials, and by the time a model
+        /// is in Unity every emissive face is on M_LPD_Emissive, with the
+        /// swatch surviving only in the UV - pinned to the centre of one
+        /// atlas cell. So the test could never be true: it was false for all
+        /// 811 prefabs, AddFireToLit attached nothing to anything, and the
+        /// pack shipped claiming animated fire with no fire on any torch.
+        /// A buyer found it. Measured on the shipped .unitypackage: 811
+        /// prefabs, 0 references to FX_LPD_Fire, 0 of 11 demo scenes.
+        ///
+        /// The comment it replaced was right that the name lies and the
+        /// swatch is the truth. It just read the swatch off the wrong thing.
+        static readonly int[] FireCells = { 120, 121, 122, 127, 128, 129, 130, 131 };
+        const int AtlasCols = 16, AtlasRows = 16;
+
+        /// Does this UV sit in a fire swatch's cell? lp_atlas pins every face
+        /// to the CENTRE of its cell: u = (col + 0.5) / cols and
+        /// v = 1 - (row + 0.5) / rows, so the cell is recoverable by floor.
+        static bool IsFireUV(Vector2 uv)
+        {
+            int col = Mathf.FloorToInt(uv.x * AtlasCols);
+            int row = Mathf.FloorToInt((1f - uv.y) * AtlasRows);
+            if (col < 0 || col >= AtlasCols || row < 0 || row >= AtlasRows)
+                return false;
+            int idx = row * AtlasCols + col;
+            foreach (var c in FireCells) if (c == idx) return true;
+            return false;
+        }
+
+        /// Does this prefab actually carry fire? Answered from the atlas
+        /// cells its vertices sample, which is what "the swatch IS the
+        /// flame" means once the model is in Unity.
+        ///
+        /// Name matching was tried first and is not coming back: measured
+        /// against the built library, matching "Lit" or "Candle" caught 10
+        /// of the 51 emissive models and missed 41 - every lantern, every
         /// candelabra, both oil lamps, both chandeliers, the hearths, the
-        /// censers, the flame vent and the branding iron. A torch is called
-        /// TorchWallLit and a lantern is just called LanternHanging, so the
-        /// name says nothing about whether the thing is alight. The material
-        /// does: the atlas swatch IS the flame.
+        /// censers, the flame vent and the branding iron.
         static bool HasFire(GameObject root)
         {
-            foreach (var r in root.GetComponentsInChildren<Renderer>(true))
-                foreach (var m in r.sharedMaterials)
-                {
-                    if (m == null) continue;
-                    var n = m.name.ToUpperInvariant();
-                    foreach (var sw in FireSwatches)
-                        if (n.Contains(sw)) return true;
-                }
+            foreach (var mf in root.GetComponentsInChildren<MeshFilter>(true))
+            {
+                var mesh = mf.sharedMesh;
+                if (mesh == null) continue;
+                var uv = mesh.uv;
+                if (uv == null) continue;
+                for (int i = 0; i < uv.Length; i++)
+                    if (IsFireUV(uv[i])) return true;
+            }
             return false;
         }
 
@@ -455,21 +481,32 @@ namespace LowPolyDungeon
         }
 
         /// The bounds of just the EMISSIVE geometry - the flame itself.
+        /// Where the flame goes: the bounds of the FIRE VERTICES themselves.
+        ///
+        /// This carried the same material-name bug as HasFire, and fixing it
+        /// the same way makes it strictly better than it was meant to be.
+        /// The old version took the whole RENDERER's bounds once a material
+        /// matched, which for a chandelier is the entire fitting; per-vertex
+        /// bounds put the flame on the candles.
         static Bounds EmissiveBounds(GameObject root)
         {
             bool any = false;
             var b = new Bounds(root.transform.position, Vector3.zero);
-            foreach (var r in root.GetComponentsInChildren<Renderer>(true))
-                foreach (var m in r.sharedMaterials)
+            foreach (var mf in root.GetComponentsInChildren<MeshFilter>(true))
+            {
+                var mesh = mf.sharedMesh;
+                if (mesh == null) continue;
+                var uv = mesh.uv;
+                var vt = mesh.vertices;
+                if (uv == null || vt == null || uv.Length != vt.Length) continue;
+                for (int i = 0; i < vt.Length; i++)
                 {
-                    if (m == null) continue;
-                    var nm = m.name.ToUpperInvariant();
-                    bool hit = false;
-                    foreach (var sw in FireSwatches) if (nm.Contains(sw)) { hit = true; break; }
-                    if (!hit) continue;
-                    if (!any) { b = r.bounds; any = true; } else b.Encapsulate(r.bounds);
-                    break;
+                    if (!IsFireUV(uv[i])) continue;
+                    var p = mf.transform.TransformPoint(vt[i]);
+                    if (!any) { b = new Bounds(p, Vector3.zero); any = true; }
+                    else b.Encapsulate(p);
                 }
+            }
             return any ? b : LocalBounds(root);
         }
 
