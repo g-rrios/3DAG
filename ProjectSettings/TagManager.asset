@@ -9,6 +9,7 @@ TagManager:
   - pickup
   - water
   - flip
+  - trapDoor
   layers:
   - Default
   - TransparentFX
